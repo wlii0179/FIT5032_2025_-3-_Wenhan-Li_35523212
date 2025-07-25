@@ -1,25 +1,27 @@
 <template>
-  <div style="max-width: 400px; margin: 40px auto;">
-    <h2>Login</h2>
-    <el-form :model="form" label-width="100px">
-      <el-form-item label="Username" :error="errors.username">
-        <el-input v-model="form.username" placeholder="Enter username or phone number" />
-      </el-form-item>
-      <el-form-item label="Password" :error="errors.password">
-        <el-input v-model="form.password" type="password" placeholder="Enter password" />
-      </el-form-item>
-      <el-form-item label="Role" :error="errors.role">
-        <el-select v-model="form.role" placeholder="Select role">
-          <el-option label="User" value="user" />
-          <el-option label="Admin" value="admin" />
-          <el-option label="Caregiver" value="caregiver" />
-        </el-select>
-      </el-form-item>
-      <el-form-item>
-        <el-button type="primary" @click="login">Login</el-button>
-        <el-button type="text" @click="toRegister">No account? Register</el-button>
-      </el-form-item>
-    </el-form>
+  <div class="login-container">
+    <el-card class="login-card">
+      <h2 class="login-title">Login</h2>
+      <el-form :model="form" label-width="100px">
+        <el-form-item label="Username" :error="errors.username">
+          <el-input v-model="form.username" placeholder="Enter username or phone number" />
+        </el-form-item>
+        <el-form-item label="Password" :error="errors.password">
+          <el-input v-model="form.password" type="password" placeholder="Enter password" />
+        </el-form-item>
+        <el-form-item label="Role" :error="errors.role">
+          <el-select v-model="form.role" placeholder="Select role">
+            <el-option label="User" value="user" />
+            <el-option label="Admin" value="admin" />
+            <el-option label="Caregiver" value="caregiver" />
+          </el-select>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="login" class="login-btn">Login</el-button>
+          <el-button type="text" @click="toRegister" class="login-btn">No account? Register</el-button>
+        </el-form-item>
+      </el-form>
+    </el-card>
   </div>
 </template>
 
@@ -56,4 +58,39 @@ const login = () => {
 const toRegister = () => {
   router.push('/register');
 };
-</script> 
+</script>
+
+<style scoped>
+.login-container {
+  min-height: 70vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f4f6fa;
+}
+.login-card {
+  width: 100%;
+  max-width: 400px;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px #dbeafe;
+  padding: 32px 24px 24px 24px;
+}
+.login-title {
+  text-align: center;
+  margin-bottom: 24px;
+  font-size: 2rem;
+  color: #409EFF;
+  font-weight: bold;
+}
+.login-btn {
+  margin-right: 12px;
+}
+@media (max-width: 500px) {
+  .login-card {
+    padding: 16px 4px;
+  }
+  .login-title {
+    font-size: 1.3rem;
+  }
+}
+</style> 
