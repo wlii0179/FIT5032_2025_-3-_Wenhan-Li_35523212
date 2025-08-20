@@ -28,7 +28,7 @@
 <script setup>
 import { reactive } from 'vue';
 import { useRouter } from 'vue-router';
-import { auth } from '../firebase';
+import { auth } from '../firebase.js';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 const router = useRouter();
 const form = reactive({ username: '', password: '', role: '' });
