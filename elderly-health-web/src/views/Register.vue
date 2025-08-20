@@ -34,27 +34,21 @@
 <script setup>
 import { reactive } from 'vue';
 import { useRouter } from 'vue-router';
+import { auth } from '../firebase';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
 const router = useRouter();
 const form = reactive({ username: '', password: '', confirmPassword: '', role: '' });
 const errors = reactive({ username: '', password: '', confirmPassword: '', role: '' });
 
-function getUsers() {
-  return JSON.parse(localStorage.getItem('users') || '[]');
-}
-function setUsers(users) {
-  localStorage.setItem('users', JSON.stringify(users));
-}
-
 function validateUsername() {
   if (!form.username) {
-    errors.username = 'Username is required';
-  } else if (form.username.length < 3) {
-    errors.username = 'Username must be at least 3 characters';
+    errors.username = 'Email is required';
+  } else if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(form.username)) {
+    errors.username = 'Invalid email format';
   } else {
     errors.username = '';
   }
 }
-
 function validatePassword() {
   if (!form.password) {
     errors.password = 'Password is required';
@@ -68,7 +62,6 @@ function validatePassword() {
     errors.password = '';
   }
 }
-
 function validateConfirmPassword() {
   if (!form.confirmPassword) {
     errors.confirmPassword = 'Please confirm password';
@@ -78,7 +71,6 @@ function validateConfirmPassword() {
     errors.confirmPassword = '';
   }
 }
-
 function validateRole() {
   if (!form.role) {
     errors.role = 'Role is required';
@@ -87,24 +79,25 @@ function validateRole() {
   }
 }
 
-const register = () => {
-  // 先触发所有校验
+const register = async () => {
   validateUsername();
   validatePassword();
   validateConfirmPassword();
   validateRole();
   if (Object.values(errors).some(e => e)) return;
-  // Check username uniqueness
-  const users = getUsers();
-  if (users.find(u => u.username === form.username)) {
-    errors.username = 'Username already exists';
-    return;
+  try {
+    const userCredential = await createUserWithEmailAndPassword(auth, form.username, form.password);
+    // 保存角色到localStorage（如需后端可用Firestore）
+    localStorage.setItem('currentUser', JSON.stringify({ email: form.username, role: form.role }));
+    alert('Registration successful! Please login.');
+    router.push('/login');
+  } catch (error) {
+    if (error.code === 'auth/email-already-in-use') {
+      errors.username = 'Email already exists';
+    } else {
+      alert('Registration failed: ' + error.message);
+    }
   }
-  // Save user
-  users.push({ username: form.username, password: form.password, role: form.role });
-  setUsers(users);
-  alert('Registration successful! Please login.');
-  router.push('/login');
 };
 const toLogin = () => {
   router.push('/login');

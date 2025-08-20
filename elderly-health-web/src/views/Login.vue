@@ -28,32 +28,32 @@
 <script setup>
 import { reactive } from 'vue';
 import { useRouter } from 'vue-router';
+import { auth } from '../firebase';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 const router = useRouter();
 const form = reactive({ username: '', password: '', role: '' });
 const errors = reactive({ username: '', password: '', role: '' });
 
-function getUsers() {
-  return JSON.parse(localStorage.getItem('users') || '[]');
-}
-
-const login = () => {
+const login = async () => {
   errors.username = errors.password = errors.role = '';
-  if (!form.username) errors.username = 'Username is required';
+  if (!form.username) errors.username = 'Email is required';
   if (!form.password) errors.password = 'Password is required';
   if (!form.role) errors.role = 'Role is required';
   if (Object.values(errors).some(e => e)) return;
-  const users = getUsers();
-  const user = users.find(u => u.username === form.username && u.password === form.password && u.role === form.role);
-  if (!user) {
-    errors.username = 'Invalid username, password or role';
-    errors.password = 'Invalid username, password or role';
-    errors.role = 'Invalid username, password or role';
-    return;
+  try {
+    await signInWithEmailAndPassword(auth, form.username, form.password);
+    // 登录成功后同步角色到localStorage（如需后端可用Firestore）
+    localStorage.setItem('currentUser', JSON.stringify({ email: form.username, role: form.role }));
+    alert('Login successful!');
+    router.push('/profile');
+  } catch (error) {
+    if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+      errors.username = 'Invalid email or password';
+      errors.password = 'Invalid email or password';
+    } else {
+      alert('Login failed: ' + error.message);
+    }
   }
-  // Save current user
-  localStorage.setItem('currentUser', JSON.stringify(user));
-  alert('Login successful!');
-  router.push('/profile');
 };
 const toRegister = () => {
   router.push('/register');

@@ -19,7 +19,7 @@ const routes = [
   // Health Records
   { path: '/health-record', name: 'HealthRecord', component: () => import('../views/HealthRecord.vue') },
   { path: '/health-record/data-visualization', name: 'DataVisualization', component: () => import('../views/DataVisualization.vue') },
-  { path: '/health-record/data-export', name: 'DataExport', component: () => import('../views/DataExport.vue') },
+  { path: '/data-export', name: 'DataExport', component: () => import('../views/DataExport.vue') },
   // Medication Reminder
   { path: '/medication-reminder', name: 'MedicationReminder', component: () => import('../views/MedicationReminder.vue') },
   { path: '/medication-reminder/add-reminder', name: 'AddReminder', component: () => import('../views/AddReminder.vue') },
