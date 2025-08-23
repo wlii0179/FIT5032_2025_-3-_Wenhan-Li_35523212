@@ -1,13 +1,17 @@
+
+
 <template>
   <div class="map-container">
-  <input v-model="searchKeyword" placeholder="Enter place keyword" @keyup.enter="searchPlace" />
-  <button @click="searchPlace">Search Place</button>
-  <input v-model="start" placeholder="Start location" />
-  <input v-model="end" placeholder="Destination" />
-  <button @click="routePlan">Route Plan</button>
+    <input v-model="searchKeyword" placeholder="Enter place keyword" @keyup.enter="searchPlace" />
+    <button @click="searchPlace">Search Place</button>
+    <input v-model="start" placeholder="Start location" />
+    <input v-model="end" placeholder="Destination" />
+    <button @click="routePlan">Route Plan</button>
     <div id="amap" style="width: 100%; height: 500px;"></div>
   </div>
 </template>
+
+
 
 <script setup>
 import { ref, onMounted } from 'vue';
@@ -19,8 +23,9 @@ let map = null;
 let markers = [];
 let driving = null;
 
-// Please replace YOUR_AMAP_KEY with your Web Key from AMap (Gaode) developer platform
+// 高德地图 key 和安全密钥
 const AMAP_KEY = '39b0c2cc0ce36334b1addc56b46f91b9';
+const AMAP_SECURITY = '0a02cd7309f2566233e375800f29e053';
 
 function loadAmapScript() {
   return new Promise((resolve, reject) => {
@@ -29,7 +34,7 @@ function loadAmapScript() {
       return;
     }
     const script = document.createElement('script');
-    script.src = `https://webapi.amap.com/maps?v=2.0&key=${AMAP_KEY}&plugin=AMap.PlaceSearch,AMap.Driving`;
+    script.src = `https://webapi.amap.com/maps?v=2.0&key=${AMAP_KEY}&plugin=AMap.PlaceSearch,AMap.Driving&securityJsCode=${AMAP_SECURITY}`;
     script.onload = resolve;
     script.onerror = reject;
     document.head.appendChild(script);
@@ -93,26 +98,5 @@ function routePlan() {
   width: 100%;
   max-width: 900px;
   margin: 0 auto;
-}
-#amap {
-  margin-top: 16px;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-input {
-  margin: 4px;
-  padding: 4px 8px;
-}
-button {
-  margin: 4px;
-  padding: 4px 12px;
-  background: #409eff;
-  color: #fff;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-button:hover {
-  background: #66b1ff;
 }
 </style>
