@@ -34,8 +34,9 @@
 <script setup>
 import { reactive } from 'vue';
 import { useRouter } from 'vue-router';
-import { auth } from '../firebase';
+import { auth, db } from '../firebase';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 const router = useRouter();
 const form = reactive({ username: '', password: '', confirmPassword: '', role: '' });
 const errors = reactive({ username: '', password: '', confirmPassword: '', role: '' });
@@ -87,8 +88,17 @@ const register = async () => {
   if (Object.values(errors).some(e => e)) return;
   try {
     const userCredential = await createUserWithEmailAndPassword(auth, form.username, form.password);
-    // 保存角色到localStorage（如需后端可用Firestore）
+    // 保存角色到 localStorage
     localStorage.setItem('currentUser', JSON.stringify({ email: form.username, role: form.role }));
+    localStorage.setItem('role', form.role);
+  // notify other components
+  window.dispatchEvent(new CustomEvent('role-changed', { detail: form.role }));
+    // 写入 users 集合，便于 Admin 管理（开发环境）
+    try {
+      await addDoc(collection(db, 'users'), { email: form.username, role: form.role, createdAt: serverTimestamp() });
+    } catch (e) {
+      console.warn('Failed to write user to Firestore users collection', e);
+    }
     alert('Registration successful! Please login.');
     router.push('/login');
   } catch (error) {

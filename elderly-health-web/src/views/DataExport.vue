@@ -3,7 +3,8 @@
     <el-card class="data-export-card">
       <h2 class="data-export-title">Data Export</h2>
       <div class="export-btns">
-        <el-button type="primary" @click="exportData">Export as Excel</el-button>
+        <el-button type="primary" @click="exportCSV">Export as CSV</el-button>
+        <el-button type="primary" @click="exportJSON">Export as JSON</el-button>
         <el-button @click="exportPDF">Export as PDF</el-button>
       </div>
       <el-divider />
@@ -16,16 +17,93 @@
 </template>
 
 <script setup>
-const exportData = () => {
-  // Export to Excel logic to be implemented
-  alert('Export to Excel function under development');
-};
-const exportPDF = () => {
-  // Export to PDF logic to be implemented
-  alert('Export to PDF function under development');
-};
 import { ref } from 'vue';
+import { collection, getDocs, query, orderBy } from 'firebase/firestore';
+import { db } from '@/firebase';
+
+// fallback sample (used if Firestore empty)
+const records = ref([]);
 const email = ref('');
+
+const fetchRecords = async () => {
+  try {
+    const q = query(collection(db, 'healthRecords'), orderBy('date'));
+    const snap = await getDocs(q);
+    if (snap.empty) return [];
+    return snap.docs.map(d => {
+      const obj = d.data();
+      // normalize Timestamp -> YYYY-MM-DD string
+      let dateStr = '';
+      const pick = obj.date || obj.createdAt || obj.sampleLabel || '';
+      if (pick && pick.toDate) {
+        dateStr = pick.toDate().toISOString().slice(0, 10);
+      } else {
+        dateStr = String(pick || '').slice(0, 10);
+      }
+      return {
+        id: d.id,
+        date: dateStr,
+        avgHeartRate: obj.avgHeartRate ?? obj.avg_heart_rate ?? '',
+        ...obj
+      };
+    });
+  } catch (e) {
+    console.error('Failed to fetch records for export', e);
+    return [];
+  }
+};
+
+const downloadFile = (content, filename, mime) => {
+  const blob = new Blob([content], { type: mime || 'text/plain;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+};
+
+const toCSV = (arr) => {
+  if (!arr || !arr.length) return '';
+  const keys = Object.keys(arr[0]);
+  const header = keys.join(',');
+  const rows = arr.map(obj => keys.map(k => {
+    const v = obj[k] == null ? '' : String(obj[k]);
+    // escape quotes and commas
+    if (v.includes(',') || v.includes('\"') || v.includes('\n')) {
+      return '"' + v.replace(/"/g, '""') + '"';
+    }
+    return v;
+  }).join(','));
+  return [header].concat(rows).join('\r\n');
+};
+
+const exportCSV = async () => {
+  const data = await fetchRecords();
+  if (!data || data.length === 0) {
+    alert('No data available to export');
+    return;
+  }
+  const csv = toCSV(data);
+  downloadFile(csv, 'health-data.csv', 'text/csv;charset=utf-8;');
+};
+
+const exportJSON = async () => {
+  const data = await fetchRecords();
+  if (!data || data.length === 0) {
+    alert('No data available to export');
+    return;
+  }
+  const json = JSON.stringify(data, null, 2);
+  downloadFile(json, 'health-data.json', 'application/json;charset=utf-8;');
+};
+
+const exportPDF = () => {
+  // 简易提示：如需正式 PDF 导出，请集成 jsPDF 或 html2pdf.js
+  alert('PDF 导出尚未实现。如需，提示我可集成 jsPDF 或 html2pdf.js。');
+};
 const sendEmail = async () => {
   if (!email.value) {
     alert('Please enter recipient email!');

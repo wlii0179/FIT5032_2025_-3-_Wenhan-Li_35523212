@@ -11,8 +11,6 @@
   </div>
 </template>
 
-
-
 <script setup>
 import { ref, onMounted } from 'vue';
 
@@ -27,27 +25,31 @@ let driving = null;
 const AMAP_KEY = '39b0c2cc0ce36334b1addc56b46f91b9';
 const AMAP_SECURITY = '0a02cd7309f2566233e375800f29e053';
 
-function loadAmapScript() {
+function loadAmapWithSecurity() {
   return new Promise((resolve, reject) => {
-    if (window.AMap) {
-      resolve();
-      return;
-    }
-    const script = document.createElement('script');
-    script.src = `https://webapi.amap.com/maps?v=2.0&key=${AMAP_KEY}&plugin=AMap.PlaceSearch,AMap.Driving&securityJsCode=${AMAP_SECURITY}`;
-    script.onload = resolve;
-    script.onerror = reject;
-    document.head.appendChild(script);
+    window._AMapSecurityConfig = {
+      securityJsCode: AMAP_SECURITY,
+    };
+    const loaderScript = document.createElement('script');
+    loaderScript.src = 'https://webapi.amap.com/loader.js';
+    loaderScript.onload = () => {
+      window.AMapLoader.load({
+        key: AMAP_KEY,
+        version: '2.0',
+        plugins: ['AMap.PlaceSearch', 'AMap.Driving', 'AMap.Geocoder'],
+      })
+        .then((AMap) => {
+          resolve(AMap);
+        })
+        .catch((e) => {
+          console.error(e);
+          reject(e);
+        });
+    };
+    loaderScript.onerror = reject;
+    document.head.appendChild(loaderScript);
   });
 }
-
-onMounted(async () => {
-  await loadAmapScript();
-  map = new window.AMap.Map('amap', {
-    center: [116.397428, 39.90923],
-    zoom: 12,
-  });
-});
 
 function clearMarkers() {
   if (markers.length) {
@@ -59,12 +61,14 @@ function clearMarkers() {
 function searchPlace() {
   if (!searchKeyword.value) return;
   clearMarkers();
-  window.AMap.plugin('AMap.PlaceSearch', function () {
+  window.AMap.plugin(['AMap.PlaceSearch', 'AMap.Geocoder'], function () {
     const placeSearch = new window.AMap.PlaceSearch({
-      map: map
+      map: map,
+      city: ''
     });
     placeSearch.search(searchKeyword.value, function (status, result) {
-      if (status === 'complete' && result.poiList.pois.length) {
+      console.log('PlaceSearch:', status, result);
+      if (status === 'complete' && result.info === 'OK' && result.poiList.pois.length) {
         const poi = result.poiList.pois[0];
         const marker = new window.AMap.Marker({
           position: poi.location,
@@ -72,6 +76,23 @@ function searchPlace() {
         });
         markers.push(marker);
         map.setCenter(poi.location);
+      } else {
+        // 若POI无结果，尝试用地理编码查找地名坐标
+        const geocoder = new window.AMap.Geocoder();
+        geocoder.getLocation(searchKeyword.value, function(status2, result2) {
+          console.log('Geocoder:', status2, result2);
+          if (status2 === 'complete' && result2.geocodes && result2.geocodes.length) {
+            const loc = result2.geocodes[0].location;
+            const marker = new window.AMap.Marker({
+              position: loc,
+              map: map
+            });
+            markers.push(marker);
+            map.setCenter(loc);
+          } else {
+            alert('No result found!\nPlaceSearch error: ' + (result && result.info ? result.info : status) + '\nGeocoder error: ' + (result2 && result2.info ? result2.info : status2));
+          }
+        });
       }
     });
   });
@@ -87,11 +108,24 @@ function routePlan() {
       });
     }
     driving.search([{ keyword: start.value }, { keyword: end.value }], function (status, result) {
-      // 路径会自动显示在地图上
+      console.log('Driving:', status, result);
+      if (status !== 'complete') {
+        alert('Route not found!\nDriving error: ' + (result && result.info ? result.info : status));
+      }
     });
   });
 }
+
+onMounted(async () => {
+  const AMap = await loadAmapWithSecurity();
+  map = new AMap.Map('amap', {
+    center: [116.397428, 39.90923],
+    zoom: 12,
+  });
+});
 </script>
+
+
 
 <style scoped>
 .map-container {

@@ -18,8 +18,9 @@ const routes = [
   { path: '/online-consultation/volunteer-support', name: 'VolunteerSupport', component: () => import('../views/VolunteerSupport.vue') },
   // Health Records
   { path: '/health-record', name: 'HealthRecord', component: () => import('../views/HealthRecord.vue') },
-  { path: '/health-record/data-visualization', name: 'DataVisualization', component: () => import('../views/DataVisualization.vue') },
+  { path: '/data-visualization', name: 'DataVisualization', component: () => import('../views/DataVisualization.vue') },
   { path: '/data-export', name: 'DataExport', component: () => import('../views/DataExport.vue') },
+  { path: '/offline', name: 'Offline', component: () => import('../views/Offline.vue') },
   // Medication Reminder
   { path: '/medication-reminder', name: 'MedicationReminder', component: () => import('../views/MedicationReminder.vue') },
   { path: '/medication-reminder/add-reminder', name: 'AddReminder', component: () => import('../views/AddReminder.vue') },
@@ -41,6 +42,7 @@ const routes = [
   { path: '/login', name: 'Login', component: () => import('../views/Login.vue') },
   { path: '/register', name: 'Register', component: () => import('../views/Register.vue') },
   { path: '/profile', name: 'Profile', component: () => import('../views/Profile.vue') },
+  { path: '/admin', name: 'AdminDashboard', component: () => import('../views/AdminDashboard.vue') },
   { path: '/map', name: 'MapView', component: () => import('../views/MapView.vue') },
 ];
 

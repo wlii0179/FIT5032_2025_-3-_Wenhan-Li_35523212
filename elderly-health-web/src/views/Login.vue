@@ -28,8 +28,9 @@
 <script setup>
 import { reactive } from 'vue';
 import { useRouter } from 'vue-router';
-import { auth } from '../firebase.js';
+import { auth, db } from '../firebase.js';
 import { signInWithEmailAndPassword } from 'firebase/auth';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 const router = useRouter();
 const form = reactive({ username: '', password: '', role: '' });
 const errors = reactive({ username: '', password: '', role: '' });
@@ -42,8 +43,21 @@ const login = async () => {
   if (Object.values(errors).some(e => e)) return;
   try {
     await signInWithEmailAndPassword(auth, form.username, form.password);
-    // 登录成功后同步角色到localStorage（如需后端可用Firestore）
-    localStorage.setItem('currentUser', JSON.stringify({ email: form.username, role: form.role }));
+    // 登录成功后从 users 集合获取角色（若存在）并同步到 localStorage
+    let role = form.role;
+    try {
+      const q = query(collection(db, 'users'), where('email', '==', form.username));
+      const snap = await getDocs(q);
+      if (!snap.empty) {
+        role = snap.docs[0].data().role || role;
+      }
+    } catch (e) {
+      console.warn('Failed to query users collection for role', e);
+    }
+    localStorage.setItem('currentUser', JSON.stringify({ email: form.username, role }));
+    localStorage.setItem('role', role);
+  // notify other components (App) about role change
+  window.dispatchEvent(new CustomEvent('role-changed', { detail: role }));
     alert('Login successful!');
     router.push('/profile');
   } catch (error) {

@@ -6,6 +6,14 @@ const route = useRoute();
 const activeIndex = ref(route.path);
 
 const isLoggedIn = computed(() => !!localStorage.getItem('currentUser'));
+// make role reactive and listen for changes
+const role = ref(localStorage.getItem('role'));
+const isAdmin = computed(() => role.value === 'admin');
+
+const onRoleChanged = (e) => {
+  // custom event may carry detail or we fallback to localStorage
+  role.value = (e && e.detail) || localStorage.getItem('role');
+};
 
 const drawerVisible = ref(false);
 const isMobile = ref(window.innerWidth <= 600);
@@ -16,9 +24,13 @@ const handleResize = () => {
 
 onMounted(() => {
   window.addEventListener('resize', handleResize);
+  window.addEventListener('role-changed', onRoleChanged);
+  window.addEventListener('storage', onRoleChanged);
 });
 onUnmounted(() => {
   window.removeEventListener('resize', handleResize);
+  window.removeEventListener('role-changed', onRoleChanged);
+  window.removeEventListener('storage', onRoleChanged);
 });
 
 const handleSelect = (key) => {
@@ -53,8 +65,10 @@ const logout = () => {
         <el-menu-item v-if="!isLoggedIn" index="/register">Register</el-menu-item>
         <el-menu-item index="/profile">Profile</el-menu-item>
         <el-menu-item index="/health-record">Health Records</el-menu-item>
-        <el-menu-item index="/data-visualization">Data Visualization</el-menu-item>
+  <el-menu-item index="/data-visualization">Data Visualization</el-menu-item>
+  <el-menu-item v-if="isAdmin" index="/admin">Admin</el-menu-item>
   <el-menu-item index="/data-export">Data Export</el-menu-item>
+  <el-menu-item index="/offline">Offline</el-menu-item>
   <el-menu-item index="/map">Map</el-menu-item>
       </el-menu>
       <!-- 移动端汉堡按钮 -->
@@ -88,8 +102,10 @@ const logout = () => {
         <el-menu-item v-if="!isLoggedIn" index="/register">Register</el-menu-item>
         <el-menu-item index="/profile">Profile</el-menu-item>
         <el-menu-item index="/health-record">Health Records</el-menu-item>
-        <el-menu-item index="/data-visualization">Data Visualization</el-menu-item>
+  <el-menu-item index="/data-visualization">Data Visualization</el-menu-item>
+  <el-menu-item v-if="isAdmin" index="/admin">Admin</el-menu-item>
         <el-menu-item index="/data-export">Data Export</el-menu-item>
+  <el-menu-item index="/offline">Offline</el-menu-item>
       </el-menu>
     </el-drawer>
     <router-view />
