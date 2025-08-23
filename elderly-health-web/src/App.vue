@@ -54,7 +54,8 @@ const logout = () => {
         <el-menu-item index="/profile">Profile</el-menu-item>
         <el-menu-item index="/health-record">Health Records</el-menu-item>
         <el-menu-item index="/data-visualization">Data Visualization</el-menu-item>
-        <el-menu-item index="/data-export">Data Export</el-menu-item>
+  <el-menu-item index="/data-export">Data Export</el-menu-item>
+  <el-menu-item index="/map">Map</el-menu-item>
       </el-menu>
       <!-- 移动端汉堡按钮 -->
       <el-button
